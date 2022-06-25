@@ -9,16 +9,20 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TodoCreateDto } from './dto/todo.create.dto';
 import { TodoUpdateDto } from './dto/todo.update.dto';
 import { TodoEntity } from './todo.entity';
 import { TodoService } from './todo.service';
 
 @ApiTags('Todos')
+@ApiBearerAuth()
 @Controller('todo')
+@UseGuards(JwtAuthGuard)
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
@@ -34,7 +38,6 @@ export class TodoController {
     @Param('todoId') todoId: number,
   ): Promise<TodoEntity> {
     const todo = await this.todoService.getTodoById(todoId);
-    console.log(todo);
 
     if (!todo) {
       throw new HttpException(
@@ -51,7 +54,6 @@ export class TodoController {
   public async createTodo(
     @Body(new ValidationPipe()) todoCreateDto: TodoCreateDto,
   ): Promise<TodoEntity> {
-    console.log(todoCreateDto);
     return this.todoService.createTodo(todoCreateDto);
   }
 
