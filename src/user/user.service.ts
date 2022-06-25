@@ -27,6 +27,11 @@ export class UserService {
   }
 
   public async createUser(userCreateDto: UserCreateDto): Promise<UserEntity> {
+    const usersInDB = await this.getAllUsers();
+    if (!usersInDB.length) {
+      userCreateDto['role'] = 'ADMIN';
+    }
+
     const { password } = userCreateDto;
     const hashedPassword = await bcrypt.hash(password, 10);
     userCreateDto = { ...userCreateDto, password: hashedPassword };

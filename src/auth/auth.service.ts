@@ -1,4 +1,9 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  LoggerService,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -13,6 +18,7 @@ import { JwtPayload } from './interfaces/jwt-payload.interface';
 @Injectable()
 export class AuthService {
   private readonly cookieOptions!: CookieOptions;
+  private readonly logger: LoggerService = new Logger(AuthService.name);
 
   constructor(
     private readonly configService: ConfigService,
@@ -23,6 +29,9 @@ export class AuthService {
   public async signUp(registrationDto: UserCreateDto): Promise<UserEntity> {
     const user = await this.userService.getUserByEmail(registrationDto.email);
     if (user) {
+      this.logger.error(
+        `User already eists with email: ${registrationDto.email}`,
+      );
       throw new ConflictException(`User with such email is already exists`);
     }
 

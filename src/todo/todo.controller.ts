@@ -6,6 +6,8 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  Logger,
+  LoggerService,
   Param,
   Patch,
   Post,
@@ -24,11 +26,14 @@ import { TodoService } from './todo.service';
 @Controller('todo')
 @UseGuards(JwtAuthGuard)
 export class TodoController {
+  private readonly logger: LoggerService = new Logger(TodoController.name);
+
   constructor(private readonly todoService: TodoService) {}
 
   @Get('/')
   @HttpCode(HttpStatus.OK)
   public async getAllTodos(): Promise<TodoEntity[]> {
+    this.logger.log('Receiving all todos.');
     return this.todoService.getAllTodos();
   }
 
@@ -37,9 +42,11 @@ export class TodoController {
   public async getTodoById(
     @Param('todoId') todoId: number,
   ): Promise<TodoEntity> {
+    this.logger.log(`Receiving todo with id: ${todoId}.`);
     const todo = await this.todoService.getTodoById(todoId);
 
     if (!todo) {
+      this.logger.error(`There is no such todo with id: ${todoId}`);
       throw new HttpException(
         'There is no such todo with this id',
         HttpStatus.NOT_FOUND,
@@ -54,6 +61,7 @@ export class TodoController {
   public async createTodo(
     @Body(new ValidationPipe()) todoCreateDto: TodoCreateDto,
   ): Promise<TodoEntity> {
+    this.logger.log('Creating new todo.');
     return this.todoService.createTodo(todoCreateDto);
   }
 
@@ -63,12 +71,14 @@ export class TodoController {
     @Body(new ValidationPipe()) todoUpdateDto: TodoUpdateDto,
     @Param('todoId') todoId: number,
   ): Promise<TodoEntity> {
+    this.logger.log(`Refactoring todo with id: ${todoId}.`);
     const updatedTodoResult = await this.todoService.updateTodo(
       todoId,
       todoUpdateDto,
     );
 
     if (!updatedTodoResult.affected) {
+      this.logger.error(`There is no such todo with id: ${todoId}`);
       throw new HttpException(
         'There is no such todo with this id',
         HttpStatus.NOT_FOUND,
@@ -81,9 +91,11 @@ export class TodoController {
   @Delete('/:todoId')
   @HttpCode(HttpStatus.NO_CONTENT)
   public async deleteTodo(@Param('todoId') todoId: number): Promise<void> {
+    this.logger.log(`Deleting todo with id: ${todoId}.`);
     const deleteTodoResult = await this.todoService.deleteTodo(todoId);
 
     if (!deleteTodoResult.affected) {
+      this.logger.error(`There is no such todo with id: ${todoId}`);
       throw new HttpException(
         'There is no such todo with this id',
         HttpStatus.NOT_FOUND,

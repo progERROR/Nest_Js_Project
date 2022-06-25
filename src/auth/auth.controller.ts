@@ -3,6 +3,8 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Logger,
+  LoggerService,
   Post,
   Res,
   ValidationPipe,
@@ -16,6 +18,8 @@ import { UserLoginDto } from './dto/user-login.dto';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
+  private readonly logger: LoggerService = new Logger(AuthController.name);
+
   constructor(private readonly authService: AuthService) {}
 
   @Post('/signup')
@@ -24,6 +28,9 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body(new ValidationPipe()) userRegistrationDto: UserCreateDto,
   ): Promise<void> {
+    this.logger.log(
+      `[SignUp] Of new User with email: ${userRegistrationDto.email}`,
+    );
     const user = await this.authService.signUp(userRegistrationDto);
 
     await this.authService.sendSignInResponse(user, response);
@@ -35,6 +42,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body(new ValidationPipe()) userLoginDto: UserLoginDto,
   ): Promise<void> {
+    this.logger.log(`[SignIn] Of the User with email: ${userLoginDto.email}`);
     const user = await this.authService.signIn(userLoginDto);
 
     await this.authService.sendSignInResponse(user, response);
